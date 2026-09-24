@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "smart_capture_kit",
     platforms: [
-        .iOS("15.0")
+        .iOS("15.5")
     ],
     products: [
         .library(name: "smart-capture-kit", targets: ["smart_capture_kit"])

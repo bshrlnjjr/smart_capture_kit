@@ -15,7 +15,7 @@ Guided portrait and ID-card capture with on-device quality checks and OCR field 
   s.source           = { :path => '.' }
   s.source_files = 'smart_capture_kit/Sources/smart_capture_kit/**/*'
   s.dependency 'Flutter'
-  s.platform = :ios, '15.0'
+  s.platform = :ios, '15.5'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }

@@ -5,7 +5,27 @@
 Not published. The package is in early development; see the status table in
 the README for what works today.
 
-### Added
+### Added (phase 4 — portrait capture)
+
+- `PortraitCaptureController`, a reusable, `ValueListenable<PortraitGuidanceState>`
+  controller wrapping `camera` + on-device ML Kit face detection: live guidance
+  at a throttled, drop-not-queue frame rate, app-lifecycle-aware camera
+  teardown/reopen, and a full-resolution post-capture quality pass.
+- `SmartCapture.capturePortrait` is implemented end to end: guided live
+  capture, review screen (retake / continue, including "continue anyway" past
+  failed checks), optional face-centered crop at a requested aspect ratio, and
+  typed results.
+- Camera permission denial maps to `SmartCaptureErrorCode.cameraPermissionDenied`
+  / `cameraPermissionPermanentlyDenied`, verified against the exact error codes
+  `camera_avfoundation` and `camera_android_camerax` raise.
+- Brightness (mean luminance) and sharpness (Laplacian variance) computed
+  off the UI isolate via `compute()`.
+- Normalizes a real iOS/Android platform inconsistency: `camera_avfoundation`
+  leaves AVFoundation's front-camera photo mirroring on by default;
+  `camera_android_camerax`'s `ImageCapture` never mirrors. Both now honor
+  `PortraitCaptureOptions.mirrorFrontCameraOutput` the same way.
+
+### Added (phase 1-3)
 
 - Public API surface: `SmartCapture`, `PortraitCaptureOptions`,
   `DocumentCaptureOptions`, and the result, quality-check, OCR and field
@@ -29,9 +49,19 @@ the README for what works today.
 
 ### Known limitations
 
-- Camera capture, quality analysis, perspective correction and OCR are not
-  implemented. `SmartCapture.capturePortrait` and
-  `SmartCapture.captureDocument` validate their options and then throw.
+- Document capture, perspective correction and OCR are not implemented.
+  `SmartCapture.captureDocument` validates its options and then throws.
+- Portrait capture's `motion` quality check always reports `notEvaluated`:
+  judging camera shake from a single still frame with no gyroscope trace is
+  not implemented.
+- Camera permission is only requested/checked implicitly by opening the
+  camera; "permanently denied" is detected from the platform's own error code
+  but the review screen's "open settings" affordance does not yet deep-link
+  into system settings.
+- iOS: `google_mlkit_face_detection`/`google_mlkit_commons` require iOS 15.5+
+  (bumped from this package's earlier 15.0 minimum) and ship no arm64 iOS
+  Simulator slice — the example app's simulator build runs under Rosetta
+  (x86_64); real devices are unaffected.
 - Arabic support on iOS is inferred from a macOS Vision probe and has not yet
   been confirmed on a physical device.
 - No Arabic OCR accuracy has been measured on real captures.

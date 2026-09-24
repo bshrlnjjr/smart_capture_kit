@@ -1,8 +1,9 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'common/errors.dart';
 import 'document/document_options.dart';
 import 'document/document_result.dart';
+import 'portrait/portrait_capture_screen.dart';
 import 'portrait/portrait_options.dart';
 import 'portrait/portrait_result.dart';
 
@@ -41,12 +42,17 @@ abstract final class SmartCapture {
     PortraitCaptureOptions options = const PortraitCaptureOptions(),
   }) async {
     options.thresholds.validate();
-    throw const SmartCaptureException(
-      code: SmartCaptureErrorCode.platformError,
-      message: 'Portrait capture is not implemented yet (phase 4). The public '
-          'API, models and options in this release are final enough to build '
-          'against; the camera pipeline behind them is not wired up.',
+
+    final outcome = await Navigator.of(context).push<Object?>(
+      MaterialPageRoute(
+        builder: (_) => PortraitCaptureScreen(options: options),
+        fullscreenDialog: true,
+      ),
     );
+
+    if (outcome == null) return null;
+    if (outcome is SmartCaptureException) throw outcome;
+    return outcome as PortraitCaptureResult;
   }
 
   /// Opens the guided document capture flow for the configured sides.

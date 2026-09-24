@@ -170,3 +170,23 @@ place. Ambiguous characters are never silently repaired. This is what makes the
    evidence model must tolerate a field mapping to multiple disjoint boxes.
 5. Jordanian ID field layout is **not** encoded anywhere yet, by design. No layout
    assumption may be committed before redacted samples are inspected.
+
+## Addendum (phase 4): iOS toolchain constraints discovered while wiring portrait capture
+
+Two facts surfaced while integrating `google_mlkit_face_detection` for live
+portrait guidance, neither about OCR directly but both affecting the platform
+floor this package can declare:
+
+1. **`google_mlkit_commons` 0.13.0 requires iOS 15.5+**, not 15.0. `pod install`
+   refuses to build below it. The package's iOS deployment target is raised
+   to 15.5 accordingly (`ios/smart_capture_kit.podspec`,
+   `ios/smart_capture_kit/Package.swift`, and the example's Xcode project).
+2. **The ML Kit iOS pods ship no arm64 Simulator slice.** Confirmed by Xcode's
+   own build output: `GoogleMLKit`, `MLImage`, `MLKitCommon`,
+   `MLKitFaceDetection` and `MLKitVision` are flagged as x86_64-only for
+   simulator, and Xcode responds by building the entire Runner target
+   x86_64-only for that destination. It still runs, under Rosetta, so this is
+   a performance and CI-runner-architecture footnote rather than a capability
+   gap — but it means a future CI job building the example for the simulator
+   needs an x86_64-capable (or Rosetta-enabled) runner, and it does not affect
+   physical-device builds, which link the pods' arm64 device slice normally.

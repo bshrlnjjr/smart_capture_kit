@@ -3,8 +3,9 @@
 Guided portrait and identity-card capture for Flutter, with on-device quality
 checks and OCR field extraction.
 
-> **Early development.** The public API is implemented and unit tested; the
-> camera pipeline behind it is not. See [Status](#status) before integrating.
+> **Early development.** Portrait capture is implemented end to end.
+> Document capture and OCR are not yet. See [Status](#status) before
+> integrating.
 
 ## What this package is, and is not
 
@@ -34,14 +35,16 @@ configured. Nothing more.
 | Arabic / Western text normalization | Implemented, unit tested |
 | Document profile registry | Implemented, unit tested |
 | English + Arabic UI strings | Implemented |
-| Guided portrait capture | Not implemented |
+| Guided portrait capture: live guidance, quality pass, crop | **Implemented**, unit tested |
 | Guided document capture, corner detection, rectification | Not implemented |
 | OCR engines (Apple Vision / ML Kit / Tesseract) | Not implemented |
 | Field mapping for any document profile | Not implemented, by design — see below |
 
-`SmartCapture.capturePortrait` and `SmartCapture.captureDocument` currently
-validate their options and then throw a `SmartCaptureException`. The API they
-throw from is stable enough to build against.
+`SmartCapture.capturePortrait` opens a real camera screen backed by on-device
+face detection and returns a fully analyzed result. `SmartCapture.captureDocument`
+still validates its options and then throws a `SmartCaptureException` — the
+API it throws from is stable enough to build against, the pipeline behind it
+is not wired up yet.
 
 ## Install
 
@@ -87,6 +90,37 @@ for (final field in document?.fields?.fieldsNeedingReview ?? const []) {
 Cancellation returns `null` rather than throwing, so it needs no `try`/`catch`.
 Everything else throws `SmartCaptureException` carrying a
 `SmartCaptureErrorCode` you can switch on.
+
+### Portrait capture
+
+`capturePortrait` opens a full-screen camera flow: a live overlay guides
+framing while on-device ML Kit face detection throttles analysis to
+`analysisInterval` (frames arriving faster than that, or while an analysis is
+still running, are dropped — never queued, so a slow device degrades to a
+lower guidance rate instead of falling behind). It auto-captures once the
+frame holds `CaptureGuidance.ready` for ~700ms, and a manual shutter button is
+always available. The captured still is then re-analyzed at full resolution —
+face count, framing, head orientation, exposure, sharpness — independently of
+whatever the last preview frame showed, and a review screen offers Retake /
+Continue (and "Continue anyway" when a check failed, if
+`allowContinueOnFailedChecks` is on).
+
+Build your own UI instead of the default screen with the underlying
+`PortraitCaptureController`, a `ValueListenable<PortraitGuidanceState>`:
+
+```dart
+final controller = PortraitCaptureController(options: options);
+await controller.initialize();
+// CameraPreview(controller.cameraController!), your own overlay driven by
+// `controller.value.guidance`, then:
+final result = await controller.captureAndAnalyze();
+await controller.dispose();
+```
+
+The one check the final pass cannot make is camera shake from a single still
+frame — `QualityCheckId.motion` always reports `notEvaluated` in this release
+rather than guessing at it from blur, which motion and defocus are not the
+same thing.
 
 ### Nothing is invented
 
@@ -213,13 +247,26 @@ DocumentProfileRegistry.register(
 | Platform | Minimum |
 |---|---|
 | Android | `minSdk 24` |
-| iOS | 15.0 (Arabic OCR requires iOS 16+) |
+| iOS | 15.5 (raised from 15.0 by `google_mlkit_commons`; Arabic OCR needs iOS 16+) |
 
 Web, macOS, Windows and Linux are not supported and are not declared.
 
-Native dependencies will be documented here as they land, together with the
-`NSCameraUsageDescription` and `CAMERA` permission entries the capture flows
-require.
+### Permissions your app must declare
+
+- **Android:** `android.permission.CAMERA` is merged in automatically by the
+  `camera` plugin — no action needed in your app's manifest.
+- **iOS:** add `NSCameraUsageDescription` to your `Info.plist` yourself; unlike
+  Android, this is not injected automatically. Capture will fail with
+  `SmartCaptureErrorCode.cameraPermissionDenied` without it.
+
+### A known iOS Simulator limitation
+
+The ML Kit iOS pods (`GoogleMLKit`, `MLKitCommon`, `MLKitFaceDetection`,
+`MLKitVision`) ship no arm64 Simulator slice, only x86_64. Xcode handles this
+by building the whole app x86_64-only for the simulator, which then runs under
+Rosetta — slower, but functional. Real devices build and run arm64 natively
+and are unaffected; this is a simulator-only wrinkle in the upstream pods, not
+something this package can fix.
 
 ## Example
 

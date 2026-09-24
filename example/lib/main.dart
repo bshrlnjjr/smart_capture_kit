@@ -59,12 +59,7 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 FilledButton.icon(
-                  onPressed: () => _runCapture(
-                    () => SmartCapture.capturePortrait(
-                      context,
-                      options: PortraitCaptureOptions(labels: _labels),
-                    ),
-                  ),
+                  onPressed: _capturePortrait,
                   icon: const Icon(Icons.person_outline),
                   label: Text(_labels.portraitTitle),
                 ),
@@ -97,17 +92,38 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _runCapture(Future<Object?> Function() action) async {
+  Future<void> _capturePortrait() async {
     try {
-      await action();
-    } on SmartCaptureException catch (e) {
-      if (!mounted) return;
-      showDialog<void>(
+      final result = await SmartCapture.capturePortrait(
+        context,
+        options: PortraitCaptureOptions(labels: _labels),
+      );
+      if (result == null || !mounted) return; // user cancelled
+
+      await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(e.code.name),
-          content: Text(
-            '${e.message}\n\nretryable: ${e.isRetryable}',
+          title: const Text('Portrait captured'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.file(
+                  (result.croppedImage ?? result.originalImage).file,
+                  height: 160,
+                ),
+                const SizedBox(height: 12),
+                Text('faces detected: ${result.faceCount}'),
+                Text(
+                  'continued despite failures: '
+                  '${result.userContinuedDespiteFailures}',
+                ),
+                const Divider(),
+                for (final check in result.qualityReport.checks)
+                  Text('${check.id.name}: ${check.outcome.name}'),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -117,6 +133,37 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       );
+
+      // The host owns these files the moment the result is returned; the
+      // example doesn't keep them, so it disposes them right after showing
+      // this summary.
+      await result.dispose();
+    } on SmartCaptureException catch (e) {
+      if (!mounted) return;
+      await _showError(e);
+    }
+  }
+
+  Future<void> _showError(SmartCaptureException e) => showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(e.code.name),
+          content: Text('${e.message}\n\nretryable: ${e.isRetryable}'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+
+  Future<void> _runCapture(Future<Object?> Function() action) async {
+    try {
+      await action();
+    } on SmartCaptureException catch (e) {
+      if (!mounted) return;
+      await _showError(e);
     }
   }
 }
@@ -135,16 +182,16 @@ class _PhaseBanner extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Phase 3 — public API only',
+              'Phase 4 — portrait capture is live',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8),
             Text(
-              'Models, options, errors, profiles and text normalization are '
-              'implemented and unit tested. The camera pipeline is not wired '
-              'up yet, so the capture buttons below deliberately surface a '
-              'structured SmartCaptureException rather than pretending to '
-              'work.',
+              'Portrait capture runs a real camera + on-device face-detection '
+              'pipeline: live guidance, a full-resolution quality pass, and an '
+              'optional cropped output. Document capture and OCR are not '
+              'implemented yet, so that button still surfaces a structured '
+              'SmartCaptureException rather than pretending to work.',
             ),
           ],
         ),

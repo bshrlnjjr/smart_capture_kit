@@ -18,6 +18,10 @@ export 'src/extraction/field_models.dart';
 export 'src/ocr/ocr_engine.dart';
 export 'src/ocr/ocr_models.dart';
 export 'src/ocr/text_normalization.dart';
+export 'src/portrait/portrait_capture_controller.dart';
+export 'src/portrait/portrait_frame_analysis.dart' show PortraitGuidanceState;
 export 'src/portrait/portrait_options.dart';
 export 'src/portrait/portrait_result.dart';
+export 'src/portrait/portrait_review_screen.dart'
+    show PortraitReviewOutcome, ReviewAccepted, RetakeRequested;
 export 'src/smart_capture.dart';
