@@ -29,6 +29,11 @@ python3 tool/ocr_benchmark/merge_passes.py $OUT/paddle_ar.json $OUT/paddle_en.js
 python3 tool/ocr_benchmark/score.py $OUT/samples vision=$OUT/vision.json tess=$OUT/tess.json
 ```
 
+```sh
+# 5. Field extraction outcome per engine (correct / WRONG / uncertain / missing)
+dart run tool/ocr_benchmark/extract_eval.dart $OUT/samples vision=$OUT/vision.json
+```
+
 The generator is deterministic (fixed seed), so the same command always
 produces the same cards.
 

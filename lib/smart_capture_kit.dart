@@ -19,6 +19,7 @@ export 'src/document/document_options.dart';
 export 'src/document/document_profile.dart';
 export 'src/document/document_result.dart';
 export 'src/extraction/field_models.dart';
+export 'src/extraction/rule_based_extractor.dart';
 export 'src/ocr/ocr_engine.dart';
 export 'src/ocr/ocr_models.dart';
 export 'src/ocr/text_normalization.dart';

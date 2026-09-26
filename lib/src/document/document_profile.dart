@@ -174,8 +174,10 @@ class DocumentProfileRegistry {
     expectedScripts: [OcrScript.arabic, OcrScript.latin],
     extractionSupport: ProfileExtractionSupport.rawTextOnly,
     extractor: NoFieldExtractor([]),
-    notes: 'ID-1 format, Arabic and Latin script. Field layout intentionally '
-        'undefined pending inspection of redacted samples; see '
+    notes: 'ID-1 format, Arabic and Latin script. Dates and the national '
+        'number are printed in Western digits (confirmed by the project owner, '
+        '2026-09-26). Field labels and layout intentionally undefined pending '
+        'inspection of redacted samples; see '
         'doc/decisions/0001-ocr-engine-selection.md, open risk 5.',
   );
 

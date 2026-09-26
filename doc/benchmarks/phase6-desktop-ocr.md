@@ -233,6 +233,41 @@ Findings:
    figure also counts detection twice. Speed has to be measured on a
    device.
 
+## Field extraction on the recorded output (phase 7)
+
+`tool/ocr_benchmark/extract_eval.dart` runs `RuleBasedFieldExtractor` over
+each engine's recorded output, with label rules for the synthetic card, and
+sorts every field into one of four outcomes. **WRONG** means the field was
+marked `recognized` with a wrong value. That is the outcome the extractor
+exists to prevent: everything else is either correct or visibly flagged for
+review.
+
+| engine | correct | WRONG | uncertain | missing |
+|---|---|---|---|---|
+| Vision | 94.0% | 1.0% | 5.0% | 0.0% |
+| Tesseract fast | 91.2% | 2.5% | 4.0% | 2.3% |
+| Paddle ar | 78.7% | 0.1% | 11.0% | 10.2% |
+| Paddle ar+en | 84.4% | 0.1% | 5.2% | 10.2% |
+
+Two checks added during this evaluation catch most wrong values that
+otherwise look well formed:
+
+- A text field declared as one script, but containing letters of the other
+  script or any digit (`Aلali`, `المصري 1`).
+- An uppercase letter inside a mixed-case word (`AInajjar`, `ALzoubi`), the
+  classic `I`/`l` confusion.
+
+Together they cut Tesseract's WRONG rate from 4.5% to 2.5%, and PaddleOCR
+Arabic + English from 0.6% to 0.1%.
+
+What is left is misread Arabic in free text: a dropped last letter
+(`العقب`) or a misplaced dot (`إريد` for `إربد`, `ماديا` for `مادبا`).
+Nothing about the format gives these away. Vision's confidence cannot catch
+them either: it gives almost every line the same score (0.3, 0.5 or 1.0),
+and raising the floor to 0.75 flags 92% of all fields. So the review step,
+not the extractor, must catch these: free-text fields should be shown next
+to their source image crop in phase 8.
+
 ## Next measurements needed
 
 1. Run the same 120 images through Vision on an iPhone and through ML Kit

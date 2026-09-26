@@ -5,6 +5,19 @@
 Not published. The package is in early development; see the status table in
 the README for what works today.
 
+### Added (phase 7 — field extraction, in progress)
+
+- `RuleBasedFieldExtractor` and `FieldRule`: label-based field extraction
+  (text, number, date and choice values) with per-field evidence and
+  explicit `uncertain` / `missing` states. It handles values printed before
+  their label, labels whose words were merged, values glued to the label,
+  values on a neighbouring line, and labels whose value the recognizer
+  dropped. It also checks the relative order of issue, expiry and birth
+  dates, and flags wrong-script or I/l-style misreads in names.
+- `jo_national_id` notes that dates and the national number are printed in
+  Western digits. Its field layout is still undefined until labels are
+  confirmed.
+
 ### Added (phase 6 — OCR prototype, in progress)
 
 - Synthetic-card OCR benchmark (`tool/ocr_benchmark/`) and first desktop
