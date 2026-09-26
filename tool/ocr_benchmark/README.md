@@ -17,6 +17,14 @@ swift tool/ocr_benchmark/run_vision.swift $OUT/samples $OUT/vision.json
 python3 tool/ocr_benchmark/run_tesseract.py $OUT/samples $OUT/tess.json \
     --tessdata /path/to/tessdata_fast --langs ara+eng --psm 6
 
+# 3b. PaddleOCR (Python 3.12 venv: pip install paddlepaddle paddleocr).
+#     Mobile detector + Arabic recognizer by default; a second run with the
+#     English recognizer, merged, models the "one detection, two recognizers"
+#     design.
+python tool/ocr_benchmark/run_paddle.py $OUT/samples $OUT/paddle_ar.json
+python tool/ocr_benchmark/run_paddle.py $OUT/samples $OUT/paddle_en.json --rec en_PP-OCRv5_mobile_rec
+python3 tool/ocr_benchmark/merge_passes.py $OUT/paddle_ar.json $OUT/paddle_en.json $OUT/paddle_merged.json
+
 # 4. Score
 python3 tool/ocr_benchmark/score.py $OUT/samples vision=$OUT/vision.json tess=$OUT/tess.json
 ```

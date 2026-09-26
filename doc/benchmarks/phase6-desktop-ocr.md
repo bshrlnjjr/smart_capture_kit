@@ -168,15 +168,78 @@ model for every image, which a persistent in-app engine would do only once.
      TFLite text recognizer) compares on this same set. ADR 0001 rejected
      PaddleOCR on binding maturity, not accuracy. These numbers make its
      accuracy worth measuring.
+- **Android, update after the PaddleOCR run below:** PaddleOCR's Arabic
+  mobile model, paired with a Latin recognizer on the same detected lines,
+  beat Tesseract in every variant (90–94% vs 66–89%). It is now the
+  preferred Android candidate, with ML Kit as the Latin half. Arabic-Indic
+  digits remain unread on Android either way.
 - **Android, Latin:** ML Kit is unmeasured. Measure it on a device before
   relying on it.
+
+## PaddleOCR (added the same day)
+
+Engine setup: PaddleOCR 3.7 with PaddlePaddle 3.3 on the M1 CPU, using the
+**mobile** models an on-device build would ship: `PP-OCRv5_mobile_det`
+(4.8 MB) for detection and `arabic_PP-OCRv5_mobile_rec` (7.8 MB) for
+recognition. Two setup traps:
+
+- By default PaddleOCR picks the server-size detector, which is 84 MB and
+  took about 10.8 s per image.
+- Naming a detection model makes PaddleOCR ignore `lang` and switch to its
+  general recognizer, which cannot read Arabic, so the Arabic recognizer has
+  to be named explicitly. `run_paddle.py` does both.
+
+Three configurations were scored. All use the same detector.
+
+- **Paddle ar**: the Arabic recognizer alone.
+- **Paddle en**: `en_PP-OCRv5_mobile_rec` alone.
+- **Paddle ar+en**: one detection pass read by both recognizers, merged by
+  `merge_passes.py`. Arabic words come from the Arabic pass; digits and
+  Latin text come from the English pass.
+
+| engine | blur | clean | glare | lowres | noisy_jpeg | rotated |
+|---|---|---|---|---|---|---|
+| Key-field accuracy, Paddle ar | 73.8% | 74.4% | 72.5% | 70.6% | 73.1% | 73.8% |
+| Key-field accuracy, Paddle ar+en | 93.1% | 93.8% | 91.9% | 90.0% | 92.5% | 93.1% |
+| (Tess fast psm6, for reference) | 88.1% | 85.6% | 66.2% | 88.8% | 85.0% | 81.2% |
+
+Per field, all variants pooled:
+
+| engine | dob_ar (Arabic-Indic) | dob_ar (Western) | name_ar | place_ar | sex_ar | name_en | national_no |
+|---|---|---|---|---|---|---|---|
+| Paddle ar | 0% | **0%** | 98.3% | 99.2% | 94.2% | 92.5% | **0%** |
+| Paddle ar+en | **0%** | 100% | 98.3% | 99.2% | 94.2% | 99.2% | 98.3% |
+
+Findings:
+
+1. **The Arabic recognizer silently drops digit runs from mixed lines.** The
+   detection box covers the whole line, digits included, yet the output is
+   only the Arabic words, at 0.89–0.93 confidence. Examples:
+   `تاريخ الولادة` with the date missing, and `الرقم الوطني` with
+   "National No. 999…" missing. This is the most dangerous failure seen in
+   this benchmark: a confident, incomplete answer that an uncertainty flag
+   will not catch. PaddleOCR's Arabic model must never be used alone for
+   fields containing numbers.
+2. **Arabic words are the strongest on Android and hold up under glare.**
+   Arabic names 98%, places 99%, and no collapse under glare (Tesseract lost
+   up to a third of the lines there).
+3. **Arabic-Indic digits are still unread: 0%.** Neither recognizer handles
+   them. The English pass produces junk such as `10/./V` for them, but at
+   low confidence (~0.6), so that junk would at least be flagged.
+4. **It dropped colons in Arabic lines.** This accounts for most of Paddle's
+   12–20% Arabic CER. It does not affect field values.
+5. **Latency here (2–3 s per pass on the CPU) says little about phones.**
+   Phones would run Paddle Lite with mobile-optimized kernels. The ar+en
+   figure also counts detection twice. Speed has to be measured on a
+   device.
 
 ## Next measurements needed
 
 1. Run the same 120 images through Vision on an iPhone and through ML Kit
    and `flutter_tesseract_ocr` on an Android phone, using an on-device
    harness in the example app.
-2. Run the same images through a PaddleOCR Arabic model on the desktop.
+2. ~~Run the same images through a PaddleOCR Arabic model on the desktop.~~
+   Done; see the PaddleOCR section above.
 3. Photograph printed, laminated synthetic cards with the real capture
    flow, so OCR is scored on real rectification output.
 4. Once legally obtained, redacted samples of the target document exist,

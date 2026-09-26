@@ -10,7 +10,11 @@ the README for what works today.
 - Synthetic-card OCR benchmark (`tool/ocr_benchmark/`) and first desktop
   results (`doc/benchmarks/phase6-desktop-ocr.md`): Apple Vision reads the
   set almost perfectly; Tesseract `ara` misses every Arabic-Indic date and
-  drops Arabic lines under glare. No production OCR engine is chosen yet.
+  drops Arabic lines under glare. PaddleOCR's Arabic mobile model reads
+  Arabic words best and holds up under glare, but silently drops digits
+  unless paired with a Latin recognizer (90–94% field accuracy when
+  paired). No Android-capable engine read Arabic-Indic digits. No
+  production OCR engine is chosen yet.
 
 ### Fixed
 

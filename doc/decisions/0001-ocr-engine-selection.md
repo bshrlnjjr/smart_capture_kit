@@ -214,3 +214,34 @@ problem rather than settle it.
 - Language correction on Vision stays off by default. It rewrites text
   toward dictionary words, which conflicts with the rule that raw text is
   never silently repaired.
+
+### PaddleOCR measured on the same set
+
+These are PaddleOCR mobile models, run on the desktop CPU. Details are in the
+benchmark doc.
+
+- Its Arabic recognizer is the best measured Android-capable engine for
+  Arabic words: names 98%, places 99%, and stable under glare. But it
+  **silently drops digits** from mixed lines, at high confidence. It is
+  safe only when combined with a Latin recognizer.
+- One detection pass read by both an Arabic and a Latin recognizer reached
+  **90–94% key-field accuracy in every variant**, against Tesseract's
+  66–89%.
+- **No engine that runs on Android read Arabic-Indic digits** (0/60 for
+  Tesseract and for PaddleOCR).
+
+Revised candidate for Android, pending a device run:
+
+- Arabic words: PaddleOCR `arabic_PP-OCRv5_mobile_rec`.
+- Digits and Latin text: ML Kit, which is already a dependency, over the
+  same detected lines.
+
+Adopting it reopens the maintenance concern that originally ruled PaddleOCR
+out: the `0.0.x` Flutter binding. That can be handled by a small platform
+channel over Paddle Lite written in this package, instead of the binding.
+It costs roughly 12.6 MB of models plus the Paddle Lite runtime per ABI.
+
+Arabic-Indic digits remain an open, Android-only gap, and the document
+itself decides how much it matters: whether the target card prints
+Arabic-Indic digits in fields that have no Western-digit copy (for example
+in an English block or a machine-readable zone) is still unknown.
