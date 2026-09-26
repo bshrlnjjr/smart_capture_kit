@@ -101,3 +101,24 @@ double _laplacianSharpness(img.Image gray) {
   // in the README.
   return (variance / 1200.0).clamp(0.0, 1.0);
 }
+
+/// Fraction of pixels in [image] whose normalized luminance is at or above
+/// [luminanceThreshold] — a specular-highlight ("glare") estimate.
+///
+/// Callers evaluating document glare should pass the *rectified* document
+/// image (or an image already cropped to the document's bounds), not the
+/// full original capture: glare is only a meaningful concern within the
+/// document itself, and including surrounding background would let a bright
+/// window or lamp behind the card inflate the fraction for a card that is
+/// perfectly readable.
+double computeGlareFraction(img.Image image, {required double luminanceThreshold}) {
+  final gray = img.grayscale(image);
+  final threshold255 = (luminanceThreshold.clamp(0.0, 1.0) * 255).round();
+  var brightCount = 0;
+  final total = gray.width * gray.height;
+  if (total == 0) return 0.0;
+  for (final pixel in gray) {
+    if (pixel.r >= threshold255) brightCount++;
+  }
+  return brightCount / total;
+}

@@ -65,4 +65,43 @@ void main() {
       expect(small.meanBrightness, closeTo(large.meanBrightness, 0.02));
     });
   });
+
+  group('computeGlareFraction', () {
+    test('a uniformly dark image has zero glare', () {
+      final fraction = computeGlareFraction(
+        _solidImage(64, 20),
+        luminanceThreshold: 0.9,
+      );
+      expect(fraction, 0.0);
+    });
+
+    test('a uniformly blown-out image is entirely glare', () {
+      final fraction = computeGlareFraction(
+        _solidImage(64, 255),
+        luminanceThreshold: 0.9,
+      );
+      expect(fraction, 1.0);
+    });
+
+    test('a bright patch on a dark background reports its exact area '
+        'fraction', () {
+      final image = img.Image(width: 100, height: 100);
+      img.fill(image, color: img.ColorRgb8(20, 20, 20));
+      // A 20x20 blown-out patch: 4% of the 100x100 image.
+      img.fillRect(image, x1: 40, y1: 40, x2: 60, y2: 60, color: img.ColorRgb8(255, 255, 255));
+
+      final fraction = computeGlareFraction(image, luminanceThreshold: 0.9);
+      expect(fraction, closeTo(0.04, 0.005));
+    });
+
+    test('raising the threshold lowers the reported fraction', () {
+      final image = img.Image(width: 50, height: 50);
+      img.fill(image, color: img.ColorRgb8(200, 200, 200)); // ~0.78 normalized
+
+      final lowThreshold = computeGlareFraction(image, luminanceThreshold: 0.5);
+      final highThreshold = computeGlareFraction(image, luminanceThreshold: 0.95);
+      expect(lowThreshold, 1.0);
+      expect(highThreshold, 0.0);
+    });
+  });
 }
