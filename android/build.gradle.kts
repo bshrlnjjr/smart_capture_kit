@@ -72,6 +72,9 @@ kotlin {
 }
 
 dependencies {
+    // Bundled Latin model: works offline from first launch, no Play-services download.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("androidx.exifinterface:exifinterface:1.4.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.mockito:mockito-core:5.0.0")
 }

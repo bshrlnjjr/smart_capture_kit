@@ -25,8 +25,8 @@ class OcrRequest {
 
 /// Contract for a text recognition backend.
 ///
-/// The plugin ships Apple Vision (iOS), ML Kit (Android, Latin) and Tesseract
-/// (Arabic) implementations. A host may supply its own — typically a cloud
+/// The plugin ships [NativeOcrEngine]: Apple Vision on iOS and ML Kit (Latin
+/// only, for now) on Android. A host may supply its own — typically a cloud
 /// adapter backed by its own server — and pass it through
 /// [DocumentCaptureOptions.ocrEngineOverride].
 ///

@@ -21,6 +21,7 @@ export 'src/document/document_result.dart';
 export 'src/extraction/field_models.dart';
 export 'src/extraction/rule_based_extractor.dart';
 export 'src/ocr/ocr_engine.dart';
+export 'src/ocr/native_ocr_engine.dart' show NativeOcrEngine;
 export 'src/ocr/ocr_models.dart';
 export 'src/ocr/text_normalization.dart';
 export 'src/portrait/portrait_capture_controller.dart';

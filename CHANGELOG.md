@@ -17,6 +17,16 @@ the README for what works today.
 - `jo_national_id` notes that dates and the national number are printed in
   Western digits. Its field layout is still undefined until labels are
   confirmed.
+- `NativeOcrEngine`: on-device OCR through the plugin's own channel. iOS
+  uses Apple Vision revision 3 `.accurate` (Latin, plus Arabic on iOS 16+,
+  with language correction off by default). Android uses ML Kit Text
+  Recognition v2 with the bundled Latin model. Supported scripts are queried
+  from the device, and asking for an unsupported one throws instead of
+  returning partial text.
+- `SmartCapture.captureDocument` runs OCR on each accepted side (rectified
+  image first) and then the profile's extractor. An OCR failure is reported
+  on the new `DocumentCaptureResult.ocrError` without discarding the
+  capture.
 
 ### Added (phase 6 — OCR prototype, in progress)
 

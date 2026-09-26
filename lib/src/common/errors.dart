@@ -33,8 +33,8 @@ enum SmartCaptureErrorCode {
 
   /// No OCR engine was available for the requested script on this platform.
   ///
-  /// The canonical case is Arabic on Android with the Tesseract engine
-  /// excluded from the build.
+  /// The canonical case is a profile expecting only Arabic on Android, where
+  /// no Arabic engine is integrated yet.
   ocrEngineUnavailable,
 
   /// The OCR engine was reached but failed to process the image.

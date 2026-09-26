@@ -3,8 +3,9 @@
 Guided portrait and identity-card capture for Flutter, with on-device quality
 checks and OCR field extraction.
 
-> **Early development.** Portrait and document capture are implemented end
-> to end. OCR is not yet. See [Status](#status) before integrating.
+> **Early development.** Portrait capture, document capture and on-device
+> OCR work end to end. Arabic OCR works on iOS only for now, and no shipped
+> profile maps fields yet. See [Status](#status) before integrating.
 
 ## What this package is, and is not
 
@@ -36,15 +37,19 @@ configured. Nothing more.
 | English + Arabic UI strings | Implemented |
 | Guided portrait capture: live guidance, quality pass, crop | **Implemented**, unit tested |
 | Guided document capture, corner detection, rectification | **Implemented**, unit tested; not yet verified on real devices |
-| OCR engines (Apple Vision / ML Kit / Tesseract) | Not implemented |
-| Field mapping for any document profile | Not implemented, by design — see below |
+| On-device OCR: Apple Vision (iOS, Latin + Arabic on iOS 16+), ML Kit (Android, Latin) | **Implemented**; not yet verified on real devices |
+| Arabic OCR on Android | Not implemented. PaddleOCR is the measured candidate; see `doc/benchmarks/phase6-desktop-ocr.md` |
+| Rule-based field extraction with evidence and uncertainty | **Implemented**, unit tested |
+| Field rules for `jo_national_id` | Not defined until its printed labels are confirmed — see below |
 
 `SmartCapture.capturePortrait` opens a real camera screen backed by on-device
 face detection and returns a fully analyzed result. `SmartCapture.captureDocument`
 guides the user through the front and back of a card, detects its corners,
 returns the original and a perspective-corrected image per side, and reports
-quality checks. It does not run OCR yet: `ocr` and `fields` on its result are
-always `null`. Corner detection is a pure Dart heuristic; its limits are in
+quality checks. It then reads each side on-device and runs the profile's field
+extractor. On Android only Latin text is read today, and each page records
+which scripts were requested so a missing Arabic field is never mistaken for
+one that was not printed. Corner detection is a pure Dart heuristic; its limits are in
 `doc/decisions/0002-document-boundary-detection.md`.
 
 ## Install

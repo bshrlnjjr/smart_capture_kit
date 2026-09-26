@@ -18,8 +18,8 @@ enum OcrScript {
 /// Identifies the engine that produced a result.
 ///
 /// Recorded per page so a host can apply a stricter confidence floor where the
-/// engine is known to be weaker — notably Tesseract Arabic on Android compared
-/// with Apple Vision Arabic on iOS. See `doc/decisions/0001-ocr-engine-selection.md`.
+/// engine is known to be weaker. See `doc/benchmarks/phase6-desktop-ocr.md`
+/// for measured differences between engines.
 @immutable
 class OcrEngineDescriptor {
   const OcrEngineDescriptor({

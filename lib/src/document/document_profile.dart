@@ -104,8 +104,8 @@ class DocumentProfile {
 
   /// Scripts to ask the OCR engine for.
   ///
-  /// Drives engine selection: a profile listing [OcrScript.arabic] routes to
-  /// Apple Vision on iOS and Tesseract on Android.
+  /// The engine is asked for the subset it can read on the device; see
+  /// [OcrPageResult.requestedScripts]. Android has no Arabic engine yet.
   final List<OcrScript> expectedScripts;
 
   /// Fields this profile claims the document carries.

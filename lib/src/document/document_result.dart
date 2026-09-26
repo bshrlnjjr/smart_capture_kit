@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 
 import '../common/capture_image.dart';
+import '../common/errors.dart';
 import '../common/geometry.dart';
 import '../common/quality.dart';
 import '../extraction/field_models.dart';
@@ -42,6 +43,17 @@ class DocumentSideCapture {
 
   final bool userContinuedDespiteFailures;
 
+  /// Returns a copy with [page] as this side's OCR.
+  DocumentSideCapture withOcr(OcrPageResult page) => DocumentSideCapture(
+        side: side,
+        originalImage: originalImage,
+        qualityReport: qualityReport,
+        rectifiedImage: rectifiedImage,
+        detectedCorners: detectedCorners,
+        ocr: page,
+        userContinuedDespiteFailures: userContinuedDespiteFailures,
+      );
+
   Future<void> dispose() async {
     await originalImage.delete();
     await rectifiedImage?.delete();
@@ -60,6 +72,7 @@ class DocumentCaptureResult {
     required this.front,
     this.back,
     this.fields,
+    this.ocrError,
   });
 
   /// Profile used for capture guidance and extraction.
@@ -77,6 +90,14 @@ class DocumentCaptureResult {
   /// state of every shipped profile. See
   /// `doc/decisions/0001-ocr-engine-selection.md`.
   final ExtractedFieldSet? fields;
+
+  /// Why OCR produced nothing, when it was requested and failed — for
+  /// example [SmartCaptureErrorCode.ocrEngineUnavailable] when the device
+  /// cannot read any script the profile expects.
+  ///
+  /// The capture itself is still complete: images and quality reports are
+  /// present, and the host decides whether to retry or proceed without text.
+  final SmartCaptureException? ocrError;
 
   /// Whether any field needs human review before use.
   bool get hasFieldsNeedingReview => fields?.hasFieldsNeedingReview ?? false;
@@ -98,6 +119,7 @@ class DocumentCaptureResult {
       front: front,
       back: back,
       fields: current.withField(field),
+      ocrError: ocrError,
     );
   }
 

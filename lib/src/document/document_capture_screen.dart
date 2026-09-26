@@ -7,9 +7,12 @@ import '../common/capture_review.dart';
 import '../common/capture_widgets.dart';
 import '../common/errors.dart';
 import '../common/labels.dart';
+import '../ocr/native_ocr_engine.dart';
+import '../ocr/ocr_engine.dart';
 import '../ocr/ocr_models.dart';
 import 'document_capture_controller.dart';
 import 'document_frame_analysis.dart';
+import 'document_ocr.dart';
 import 'document_options.dart';
 import 'document_result.dart';
 import 'document_review_screen.dart';
@@ -163,14 +166,20 @@ class _DocumentCaptureScreenState extends State<DocumentCaptureScreen> {
       }
       final front = _acceptedFront ?? accepted;
       final back = _acceptedFront == null ? null : accepted;
-      _handedOff = true;
-      Navigator.of(context).pop(
-        DocumentCaptureResult(
-          profileId: _controller.profile.id,
-          front: front,
-          back: back,
-        ),
+      var result = DocumentCaptureResult(
+        profileId: _controller.profile.id,
+        front: front,
+        back: back,
       );
+      if (widget.options.ocr) {
+        result = await _recognize(result);
+      }
+      if (!mounted) {
+        await result.dispose();
+        return;
+      }
+      _handedOff = true;
+      Navigator.of(context).pop(result);
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop(
@@ -182,6 +191,33 @@ class _DocumentCaptureScreenState extends State<DocumentCaptureScreen> {
                 cause: e,
               ),
       );
+    }
+  }
+
+  /// Runs OCR and field extraction over the accepted sides. Failures come
+  /// back on [DocumentCaptureResult.ocrError]; the capture is never lost.
+  Future<DocumentCaptureResult> _recognize(DocumentCaptureResult capture) async {
+    final override = widget.options.ocrEngineOverride;
+    final OcrEngine engine;
+    try {
+      engine = override ?? NativeOcrEngine.forCurrentPlatform();
+    } on SmartCaptureException catch (e) {
+      return DocumentCaptureResult(
+        profileId: capture.profileId,
+        front: capture.front,
+        back: capture.back,
+        ocrError: e,
+      );
+    }
+    try {
+      return await runDocumentOcr(
+        capture: capture,
+        profile: _controller.profile,
+        engine: engine,
+      );
+    } finally {
+      // A host-supplied engine belongs to the host; only ours is released.
+      if (override == null) await engine.dispose();
     }
   }
 

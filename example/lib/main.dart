@@ -173,8 +173,25 @@ class _HomePageState extends State<HomePage> {
                     ),
                     for (final check in side.qualityReport.checks)
                       Text('${check.id.name}: ${check.outcome.name}'),
+                    if (side.ocr != null)
+                      Text(
+                        'OCR (${side.ocr!.engine.displayName}): '
+                        '${side.ocr!.lines.length} lines, scripts '
+                        '${side.ocr!.requestedScripts.map((s) => s.name).join('+')}',
+                      ),
                     const Divider(),
                   ],
+                if (result.ocrError != null)
+                  Text('OCR error: ${result.ocrError!.code.name} — '
+                      '${result.ocrError!.message}'),
+                // Field values can be personal data: shown on screen here
+                // for the demo, never logged.
+                for (final field in result.fields?.fields ?? const <ExtractedField>[])
+                  Text('${field.id.name}: ${field.status.name}'
+                      '${field.value == null ? '' : ' — ${field.value}'}'),
+                if (result.fields != null && result.fields!.fields.isEmpty)
+                  Text('Profile "${result.profileId}" maps no fields yet '
+                      '(raw text only).'),
               ],
             ),
           ),
@@ -226,16 +243,16 @@ class _PhaseBanner extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Phase 5 — portrait and document capture are live',
+              'Phase 7 — capture and on-device OCR are live',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8),
             Text(
               'Portrait capture runs camera + on-device face detection. '
-              'Document capture detects the card boundary live, then '
-              'perspective-corrects each side and runs quality checks on the '
-              'full-resolution image. OCR is not implemented yet, so '
-              'document results carry images and checks only.',
+              'Document capture detects the card boundary live, '
+              'perspective-corrects each side, runs quality checks, then '
+              'reads the text on-device (Apple Vision on iOS; ML Kit, Latin '
+              'only, on Android). The Jordan profile maps no fields yet.',
             ),
           ],
         ),

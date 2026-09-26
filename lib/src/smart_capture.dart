@@ -62,11 +62,12 @@ abstract final class SmartCapture {
   /// (unless [DocumentCaptureOptions.showReviewScreen] is `false`) reviewed
   /// before the next one starts.
   ///
-  /// OCR is not run in this release: [DocumentSideCapture.ocr] and
-  /// [DocumentCaptureResult.fields] are always `null` regardless of
-  /// [DocumentCaptureOptions.ocr]. On-device OCR arrives once its engine
-  /// choice has been validated on real samples (see
-  /// `doc/decisions/0001-ocr-engine-selection.md`).
+  /// When [DocumentCaptureOptions.ocr] is `true` (the default), each accepted
+  /// side is read on-device — Apple Vision on iOS (Latin, plus Arabic on
+  /// iOS 16+), ML Kit on Android (Latin only for now) — and the profile's
+  /// extractor maps the text to [DocumentCaptureResult.fields]. An OCR
+  /// failure does not throw: the capture is returned with
+  /// [DocumentCaptureResult.ocrError] set.
   ///
   /// Reading a document is not identity verification. The plugin makes no
   /// claim that a document is authentic or that it belongs to the person
