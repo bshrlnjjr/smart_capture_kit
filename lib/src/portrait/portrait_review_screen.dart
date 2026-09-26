@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../common/capture_review.dart';
 import '../common/labels.dart';
-import '../common/quality.dart';
 import 'portrait_result.dart';
 
 /// Default review screen shown after a portrait capture.
@@ -52,7 +52,7 @@ class PortraitReviewScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   for (final check in report.checks)
-                    _QualityCheckRow(check: check),
+                    QualityCheckTile(check: check),
                 ],
               ),
             ),
@@ -93,51 +93,5 @@ class PortraitReviewScreen extends StatelessWidget {
   }
 }
 
-/// Outcome of the review screen, popped via [Navigator].
-sealed class PortraitReviewOutcome {
-  const PortraitReviewOutcome();
-}
-
-/// The user asked to retake the photo.
-class RetakeRequested extends PortraitReviewOutcome {
-  const RetakeRequested();
-}
-
-/// The user accepted the capture, possibly despite failing checks.
-class ReviewAccepted extends PortraitReviewOutcome {
-  const ReviewAccepted({required this.continuedDespiteFailures});
-
-  /// Whether at least one check had failed when the user chose to continue.
-  final bool continuedDespiteFailures;
-}
-
-class _QualityCheckRow extends StatelessWidget {
-  const _QualityCheckRow({required this.check});
-
-  final QualityCheck check;
-
-  @override
-  Widget build(BuildContext context) {
-    final (icon, color) = switch (check.outcome) {
-      QualityCheckOutcome.pass => (Icons.check_circle, Colors.green),
-      QualityCheckOutcome.warn => (Icons.warning_amber, Colors.orange),
-      QualityCheckOutcome.fail => (Icons.cancel, Colors.redAccent),
-      QualityCheckOutcome.notEvaluated => (Icons.help_outline, Colors.grey),
-    };
-    return ListTile(
-      dense: true,
-      leading: Icon(icon, color: color),
-      title: Text(_titleFor(check.id)),
-      subtitle: check.detail == null ? null : Text(check.detail!),
-    );
-  }
-
-  String _titleFor(QualityCheckId id) {
-    // Developer-facing fallback label; a host with its own labels object
-    // should render this list itself using SmartCaptureLabels instead.
-    final words = id.name
-        .replaceAllMapped(RegExp('[A-Z]'), (m) => ' ${m.group(0)}')
-        .toLowerCase();
-    return words[0].toUpperCase() + words.substring(1);
-  }
-}
+/// Outcome of the portrait review screen.
+typedef PortraitReviewOutcome = CaptureReviewOutcome;

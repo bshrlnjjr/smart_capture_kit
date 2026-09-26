@@ -5,6 +5,34 @@
 Not published. The package is in early development; see the status table in
 the README for what works today.
 
+### Added (phase 5 — document capture)
+
+- `SmartCapture.captureDocument` is implemented end to end: guided live
+  capture of the front and (optionally) the back, a review screen per side
+  showing the perspective-corrected card and the original with its detected
+  boundary, and a `DocumentCaptureResult` with both images per side.
+- `DocumentCaptureController`, the reusable
+  `ValueListenable<DocumentGuidanceState>` behind the default screen, with
+  the same throttled, drop-not-queue frame analysis as portrait capture.
+- Pure Dart document boundary detection, perspective correction, and
+  full-resolution quality checks: corners detected, within frame,
+  perspective, size, aspect ratio, exposure, sharpness and glare (glare is
+  measured on the rectified card only). See
+  `doc/decisions/0002-document-boundary-detection.md`.
+- Abandoned captures (retake, cancel after the front) and the camera
+  plugin's own temporary file are deleted, so no document image lingers.
+- OCR is not run yet: `ocr` and `fields` are always `null` in this release.
+
+### Changed
+
+- `Quad.estimatedAspectRatio` is now a method taking the image's aspect
+  ratio. It previously measured in normalized coordinates, which reported an
+  ID-1 card in a 3:4 photo as about 2.1 instead of 1.59.
+- `RetakeRequested` / `ReviewAccepted` now extend `CaptureReviewOutcome`,
+  shared by the portrait and document flows; `PortraitReviewOutcome`
+  remains as an alias.
+- `SmartCaptureLabels` gains `correctedImage` and `originalImage`.
+
 ### Added (phase 4 — portrait capture)
 
 - `PortraitCaptureController`, a reusable, `ValueListenable<PortraitGuidanceState>`

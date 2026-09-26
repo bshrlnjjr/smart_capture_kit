@@ -8,7 +8,11 @@ void main() {
   const expectedRatio = idCardAspectRatioId1;
 
   DocumentBoundaryDetection detectionFor(Quad quad, {double confidence = 0.8}) =>
-      DocumentBoundaryDetection(quad: quad, confidence: confidence);
+      DocumentBoundaryDetection(
+        quad: quad,
+        confidence: confidence,
+        imageAspectRatio: 1,
+      );
 
   // A well-framed card matching the ID-1 ratio, comfortably sized, centered,
   // with no perspective distortion.
@@ -158,6 +162,38 @@ void main() {
         aspectRatioTolerance: 0.15,
       );
       expect(state.guidance, CaptureGuidance.moveCloserToDocument);
+    });
+
+    test('an ID-1 card in a non-square (3:4 portrait) frame reads as ready',
+        () {
+      // 900x567 px card (ID-1) centered in a 1200x1600 px frame. Normalized
+      // width 0.75 vs height ~0.354 would read as ~2.1 if the frame's own
+      // aspect ratio were ignored, and fail the shape check.
+      const frameWidth = 1200.0, frameHeight = 1600.0;
+      const cardWidth = 900.0, cardHeight = 900.0 / expectedRatio;
+      const left = (frameWidth - cardWidth) / 2 / frameWidth;
+      const right = (frameWidth + cardWidth) / 2 / frameWidth;
+      const top = (frameHeight - cardHeight) / 2 / frameHeight;
+      const bottom = (frameHeight + cardHeight) / 2 / frameHeight;
+      const quad = Quad(
+        topLeft: NormalizedPoint(left, top),
+        topRight: NormalizedPoint(right, top),
+        bottomRight: NormalizedPoint(right, bottom),
+        bottomLeft: NormalizedPoint(left, bottom),
+      );
+      final state = analyzeDocumentFrame(
+        detection: const DocumentBoundaryDetection(
+          quad: quad,
+          confidence: 0.8,
+          imageAspectRatio: frameWidth / frameHeight,
+        ),
+        thresholds: const DocumentQualityThresholds(
+          minDocumentAreaFraction: 0.2,
+        ),
+        expectedAspectRatio: expectedRatio,
+        aspectRatioTolerance: 0.15,
+      );
+      expect(state.guidance, CaptureGuidance.ready);
     });
   });
 }

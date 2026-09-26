@@ -3,9 +3,8 @@
 Guided portrait and identity-card capture for Flutter, with on-device quality
 checks and OCR field extraction.
 
-> **Early development.** Portrait capture is implemented end to end.
-> Document capture and OCR are not yet. See [Status](#status) before
-> integrating.
+> **Early development.** Portrait and document capture are implemented end
+> to end. OCR is not yet. See [Status](#status) before integrating.
 
 ## What this package is, and is not
 
@@ -36,15 +35,17 @@ configured. Nothing more.
 | Document profile registry | Implemented, unit tested |
 | English + Arabic UI strings | Implemented |
 | Guided portrait capture: live guidance, quality pass, crop | **Implemented**, unit tested |
-| Guided document capture, corner detection, rectification | Not implemented |
+| Guided document capture, corner detection, rectification | **Implemented**, unit tested; not yet verified on real devices |
 | OCR engines (Apple Vision / ML Kit / Tesseract) | Not implemented |
 | Field mapping for any document profile | Not implemented, by design — see below |
 
 `SmartCapture.capturePortrait` opens a real camera screen backed by on-device
 face detection and returns a fully analyzed result. `SmartCapture.captureDocument`
-still validates its options and then throws a `SmartCaptureException` — the
-API it throws from is stable enough to build against, the pipeline behind it
-is not wired up yet.
+guides the user through the front and back of a card, detects its corners,
+returns the original and a perspective-corrected image per side, and reports
+quality checks. It does not run OCR yet: `ocr` and `fields` on its result are
+always `null`. Corner detection is a pure Dart heuristic; its limits are in
+`doc/decisions/0002-document-boundary-detection.md`.
 
 ## Install
 

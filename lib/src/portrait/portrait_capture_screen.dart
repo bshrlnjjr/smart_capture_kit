@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
+import '../common/capture_review.dart';
+import '../common/capture_widgets.dart';
 import '../common/errors.dart';
 import '../common/guidance.dart';
 import '../common/labels.dart';
@@ -170,7 +172,7 @@ class _PortraitCaptureScreenState extends State<PortraitCaptureScreen> {
   Widget _buildBody(BuildContext context) {
     final error = _initError;
     if (error != null) {
-      return _PermissionOrErrorView(error: error, labels: _labels);
+      return PermissionOrErrorView(error: error, labels: _labels);
     }
     if (!_controller.isInitialized) {
       return const Center(
@@ -206,7 +208,7 @@ class _PortraitCaptureScreenState extends State<PortraitCaptureScreen> {
           child: Center(
             child: ValueListenableBuilder<PortraitGuidanceState>(
               valueListenable: _controller,
-              builder: (context, state, _) => _GuidanceBanner(
+              builder: (context, state, _) => GuidanceBanner(
                 text: _labels.guidanceText(state.guidance),
                 isReady: state.isReady,
               ),
@@ -218,7 +220,7 @@ class _PortraitCaptureScreenState extends State<PortraitCaptureScreen> {
           right: 0,
           bottom: 24,
           child: Center(
-            child: _CaptureButton(
+            child: CaptureButton(
               enabled: !_capturing,
               onPressed: _capture,
             ),
@@ -232,96 +234,6 @@ class _PortraitCaptureScreenState extends State<PortraitCaptureScreen> {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _PermissionOrErrorView extends StatelessWidget {
-  const _PermissionOrErrorView({required this.error, required this.labels});
-
-  final Object error;
-  final SmartCaptureLabels labels;
-
-  @override
-  Widget build(BuildContext context) {
-    final message = error is SmartCaptureException
-        ? (error as SmartCaptureException).code ==
-                    SmartCaptureErrorCode.cameraPermissionDenied ||
-                (error as SmartCaptureException).code ==
-                    SmartCaptureErrorCode.cameraPermissionPermanentlyDenied
-            ? labels.cameraPermissionRequired
-            : (error as SmartCaptureException).message
-        : 'Camera failed to start.';
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.videocam_off, color: Colors.white, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: const TextStyle(color: Colors.white),
-              textAlign: TextAlign.center,
-            ),
-            if (error is SmartCaptureException &&
-                (error as SmartCaptureException).code ==
-                    SmartCaptureErrorCode.cameraPermissionPermanentlyDenied) ...[
-              const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(
-                  error as SmartCaptureException,
-                ),
-                child: Text(labels.openSettings),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GuidanceBanner extends StatelessWidget {
-  const _GuidanceBanner({required this.text, required this.isReady});
-
-  final String text;
-  final bool isReady;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: isReady ? Colors.green.withValues(alpha: 0.85) : Colors.black.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 16)),
-    );
-  }
-}
-
-class _CaptureButton extends StatelessWidget {
-  const _CaptureButton({required this.enabled, required this.onPressed});
-
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onPressed : null,
-      child: Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: enabled ? 1 : 0.4),
-          border: Border.all(color: Colors.black26, width: 3),
-        ),
-      ),
     );
   }
 }

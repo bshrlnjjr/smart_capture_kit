@@ -8,11 +8,24 @@ import 'perspective_transform.dart' show Pt;
 
 /// A detected document boundary plus how much the detector trusts it.
 class DocumentBoundaryDetection {
-  const DocumentBoundaryDetection({required this.quad, required this.confidence});
+  const DocumentBoundaryDetection({
+    required this.quad,
+    required this.confidence,
+    required this.imageAspectRatio,
+  });
 
   /// Normalized (0..1) corners, resolution-independent regardless of the
   /// analysis size this ran at.
   final Quad quad;
+
+  /// Width / height of the image [quad] is normalized against — needed to
+  /// turn [quad] back into a pixel-space shape (see
+  /// [Quad.estimatedAspectRatio]).
+  final double imageAspectRatio;
+
+  /// The detected card's width / height in pixels.
+  double? get estimatedAspectRatio =>
+      quad.estimatedAspectRatio(imageAspectRatio: imageAspectRatio);
 
   /// Rough confidence in `[0, 1]`. Not a calibrated probability — a
   /// comparison score combining how plausible the enclosed area and shape
@@ -88,7 +101,11 @@ DocumentBoundaryDetection? detectDocumentBoundary(
   final shapeScore = 1.0 - quad.perspectiveDistortion.clamp(0.0, 1.0);
   final confidence = (0.5 * areaScore + 0.5 * shapeScore).clamp(0.0, 1.0);
 
-  return DocumentBoundaryDetection(quad: quad, confidence: confidence);
+  return DocumentBoundaryDetection(
+    quad: quad,
+    confidence: confidence,
+    imageAspectRatio: width / height,
+  );
 }
 
 img.Image _downscale(img.Image image, int maxDimension) {

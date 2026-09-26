@@ -27,6 +27,8 @@ class SmartCaptureLabels {
     required this.needsReview,
     required this.cameraPermissionRequired,
     required this.openSettings,
+    required this.correctedImage,
+    required this.originalImage,
     required this.textDirection,
   });
 
@@ -71,6 +73,8 @@ class SmartCaptureLabels {
         needsReview: 'Needs review',
         cameraPermissionRequired: 'Camera access is required to continue',
         openSettings: 'Open settings',
+        correctedImage: 'Corrected',
+        originalImage: 'Original',
         textDirection: SmartCaptureTextDirection.ltr,
       );
 
@@ -118,6 +122,8 @@ class SmartCaptureLabels {
         needsReview: 'بحاجة إلى مراجعة',
         cameraPermissionRequired: 'يلزم الوصول إلى الكاميرا للمتابعة',
         openSettings: 'فتح الإعدادات',
+        correctedImage: 'المُصحَّحة',
+        originalImage: 'الأصلية',
         textDirection: SmartCaptureTextDirection.rtl,
       );
 
@@ -141,6 +147,12 @@ class SmartCaptureLabels {
   final String needsReview;
   final String cameraPermissionRequired;
   final String openSettings;
+
+  /// Review-screen toggle: the perspective-corrected document image.
+  final String correctedImage;
+
+  /// Review-screen toggle: the image exactly as captured.
+  final String originalImage;
 
   /// Direction the capture UI should lay out in.
   final SmartCaptureTextDirection textDirection;

@@ -221,15 +221,28 @@ class Quad {
     return math.max(ratio(top, bottom), ratio(left, right));
   }
 
-  /// Aspect ratio (width / height) estimated from the averaged side lengths.
+  /// Aspect ratio (width / height) estimated from the averaged side lengths,
+  /// measured in pixels of an image whose own width / height is
+  /// [imageAspectRatio].
+  ///
+  /// The image ratio is required because normalized coordinates scale x and y
+  /// differently on any non-square image: an ID-1 card in a 3:4 portrait
+  /// photo would otherwise read as roughly 2.1 instead of 1.59.
   ///
   /// Returns `null` for a degenerate quad with zero height, rather than
   /// dividing by zero or inventing a plausible-looking number.
-  double? get estimatedAspectRatio {
+  double? estimatedAspectRatio({required double imageAspectRatio}) {
+    // Scales x into the same unit as y (image heights) before measuring.
+    double length(NormalizedPoint a, NormalizedPoint b) {
+      final dx = (a.x - b.x) * imageAspectRatio;
+      final dy = a.y - b.y;
+      return math.sqrt(dx * dx + dy * dy);
+    }
+
     final width =
-        (topLeft.distanceTo(topRight) + bottomLeft.distanceTo(bottomRight)) / 2;
+        (length(topLeft, topRight) + length(bottomLeft, bottomRight)) / 2;
     final height =
-        (topLeft.distanceTo(bottomLeft) + topRight.distanceTo(bottomRight)) / 2;
+        (length(topLeft, bottomLeft) + length(topRight, bottomRight)) / 2;
     if (height <= 0) return null;
     return width / height;
   }

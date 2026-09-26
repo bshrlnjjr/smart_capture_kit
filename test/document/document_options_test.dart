@@ -153,6 +153,8 @@ void main() {
         needsReview: partial.needsReview,
         cameraPermissionRequired: partial.cameraPermissionRequired,
         openSettings: partial.openSettings,
+        correctedImage: partial.correctedImage,
+        originalImage: partial.originalImage,
         textDirection: SmartCaptureTextDirection.ltr,
       );
       expect(custom.guidanceText(CaptureGuidance.moveCloser), 'Step forward');

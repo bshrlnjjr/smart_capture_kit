@@ -103,9 +103,28 @@ void main() {
       expect(perfect.isFullyInsideImage, isTrue);
     });
 
-    test('estimatedAspectRatio reflects the shape', () {
+    test('estimatedAspectRatio reflects the shape in a square image', () {
       // 0.8 / 0.6.
-      expect(perfect.estimatedAspectRatio, closeTo(0.8 / 0.6, 1e-9));
+      expect(
+        perfect.estimatedAspectRatio(imageAspectRatio: 1),
+        closeTo(0.8 / 0.6, 1e-9),
+      );
+    });
+
+    test('estimatedAspectRatio measures in pixels, not normalized units', () {
+      // A 600x400 px card centered in a 1000x2000 px (portrait) image spans
+      // 0.6 of the width but only 0.2 of the height. In normalized units
+      // that would read as 3.0; the true ratio is 1.5.
+      const card = Quad(
+        topLeft: NormalizedPoint(0.2, 0.4),
+        topRight: NormalizedPoint(0.8, 0.4),
+        bottomRight: NormalizedPoint(0.8, 0.6),
+        bottomLeft: NormalizedPoint(0.2, 0.6),
+      );
+      expect(
+        card.estimatedAspectRatio(imageAspectRatio: 1000 / 2000),
+        closeTo(1.5, 1e-9),
+      );
     });
 
     test('estimatedAspectRatio is null for a zero-height quad', () {
@@ -115,7 +134,7 @@ void main() {
         bottomRight: NormalizedPoint(0.9, 0.5),
         bottomLeft: NormalizedPoint(0.1, 0.5),
       );
-      expect(flat.estimatedAspectRatio, isNull);
+      expect(flat.estimatedAspectRatio(imageAspectRatio: 1), isNull);
     });
   });
 }

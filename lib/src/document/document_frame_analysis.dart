@@ -68,21 +68,15 @@ DocumentGuidanceState analyzeDocumentFrame({
     );
   }
 
-  final estimatedRatio = quad.estimatedAspectRatio;
-  if (estimatedRatio != null) {
-    // Compared against the reciprocal too: a device held in the "wrong"
-    // orientation relative to how the profile's ratio is expressed produces
-    // a ratio that is the true one inverted, not merely off.
-    final directDelta = (estimatedRatio - expectedAspectRatio).abs() / expectedAspectRatio;
-    final invertedDelta =
-        (estimatedRatio - 1 / expectedAspectRatio).abs() / (1 / expectedAspectRatio);
-    if (directDelta > aspectRatioTolerance && invertedDelta > aspectRatioTolerance) {
-      return DocumentGuidanceState(
-        guidance: CaptureGuidance.unexpectedDocumentShape,
-        quad: quad,
-        confidence: detection.confidence,
-      );
-    }
+  final estimatedRatio = detection.estimatedAspectRatio;
+  if (estimatedRatio != null &&
+      aspectRatioDeviation(estimatedRatio, expectedAspectRatio) >
+          aspectRatioTolerance) {
+    return DocumentGuidanceState(
+      guidance: CaptureGuidance.unexpectedDocumentShape,
+      quad: quad,
+      confidence: detection.confidence,
+    );
   }
 
   return DocumentGuidanceState(
@@ -90,4 +84,16 @@ DocumentGuidanceState analyzeDocumentFrame({
     quad: quad,
     confidence: detection.confidence,
   );
+}
+
+/// Relative deviation of [measured] from [expected], taking whichever is
+/// smaller of the direct and the inverted comparison.
+///
+/// Compared against the reciprocal too: a card held in the "wrong"
+/// orientation relative to how the profile's ratio is expressed produces a
+/// ratio that is the true one inverted, not merely off.
+double aspectRatioDeviation(double measured, double expected) {
+  final direct = (measured - expected).abs() / expected;
+  final inverted = (measured - 1 / expected).abs() / (1 / expected);
+  return direct < inverted ? direct : inverted;
 }

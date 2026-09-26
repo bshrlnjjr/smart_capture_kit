@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
-import 'package:flutter/services.dart' show DeviceOrientation;
 import 'package:flutter/widgets.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
+import '../common/camera_support.dart';
 import '../common/capture_image.dart';
 import '../common/errors.dart';
 import '../common/temp_files.dart';
@@ -105,7 +105,7 @@ class PortraitCaptureController extends ValueNotifier<PortraitGuidanceState>
     try {
       cameras = await availableCameras();
     } on CameraException catch (e) {
-      throw _mapCameraException(e);
+      throw mapCameraException(e);
     }
 
     if (cameras.isEmpty) {
@@ -134,7 +134,7 @@ class PortraitCaptureController extends ValueNotifier<PortraitGuidanceState>
     try {
       await controller.initialize();
     } on CameraException catch (e) {
-      throw _mapCameraException(e);
+      throw mapCameraException(e);
     }
 
     if (_disposed) {
@@ -204,33 +204,12 @@ class PortraitCaptureController extends ValueNotifier<PortraitGuidanceState>
     );
   }
 
-  static const Map<DeviceOrientation, int> _degreesByOrientation = {
-    DeviceOrientation.portraitUp: 0,
-    DeviceOrientation.landscapeLeft: 90,
-    DeviceOrientation.portraitDown: 180,
-    DeviceOrientation.landscapeRight: 270,
-  };
-
-  /// Builds an ML Kit [InputImage] from a live preview frame.
-  ///
-  /// The rotation math follows the platform's own reported sensor
-  /// orientation combined with the current device orientation, per
-  /// https://developers.google.com/ml-kit/vision/face-detection/android —
-  /// getting this wrong is the single most common cause of face detection
-  /// silently returning nothing on a rotated preview.
+  /// Builds an ML Kit [InputImage] from a live preview frame, rotated per
+  /// [previewFrameRotationDegrees].
   InputImage? _buildInputImage(CameraImage image, CameraController controller) {
-    final camera = controller.description;
-    InputImageRotation? rotation;
-    if (Platform.isIOS) {
-      rotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation);
-    } else if (Platform.isAndroid) {
-      final deviceDegrees =
-          _degreesByOrientation[controller.value.deviceOrientation] ?? 0;
-      var compensated = camera.lensDirection == CameraLensDirection.front
-          ? (camera.sensorOrientation + deviceDegrees) % 360
-          : (camera.sensorOrientation - deviceDegrees + 360) % 360;
-      rotation = InputImageRotationValue.fromRawValue(compensated);
-    }
+    final degrees = previewFrameRotationDegrees(controller);
+    final rotation =
+        degrees == null ? null : InputImageRotationValue.fromRawValue(degrees);
     if (rotation == null) return null;
 
     // Only the two formats requested in _openCamera are handled: nv21 on
@@ -283,7 +262,7 @@ class PortraitCaptureController extends ValueNotifier<PortraitGuidanceState>
     try {
       shot = await controller.takePicture();
     } on CameraException catch (e) {
-      throw _mapCameraException(e, fallback: SmartCaptureErrorCode.captureFailed);
+      throw mapCameraException(e, fallback: SmartCaptureErrorCode.captureFailed);
     }
 
     final originalPath =
@@ -379,26 +358,6 @@ class PortraitCaptureController extends ValueNotifier<PortraitGuidanceState>
       case AppLifecycleState.detached:
         break;
     }
-  }
-
-  SmartCaptureException _mapCameraException(
-    CameraException e, {
-    SmartCaptureErrorCode fallback = SmartCaptureErrorCode.cameraFailure,
-  }) {
-    final code = switch (e.code) {
-      'CameraAccessDenied' ||
-      'AudioAccessDenied' =>
-        SmartCaptureErrorCode.cameraPermissionDenied,
-      'CameraAccessDeniedWithoutPrompt' ||
-      'AudioAccessDeniedWithoutPrompt' =>
-        SmartCaptureErrorCode.cameraPermissionPermanentlyDenied,
-      _ => fallback,
-    };
-    return SmartCaptureException(
-      code: code,
-      message: e.description ?? e.code,
-      cause: e,
-    );
   }
 
   @override

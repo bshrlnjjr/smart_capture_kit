@@ -2,6 +2,7 @@ import '../common/geometry.dart';
 import '../common/image_metrics.dart';
 import '../common/quality.dart';
 import 'document_boundary_detection.dart';
+import 'document_frame_analysis.dart' show aspectRatioDeviation;
 import 'document_options.dart';
 
 /// Everything the final, full-resolution document-side pass computed.
@@ -82,18 +83,14 @@ DocumentFinalAnalysis analyzeDocumentCapture({
       threshold: thresholds.minDocumentAreaFraction,
     ));
 
-    final estimatedRatio = quad.estimatedAspectRatio;
+    final estimatedRatio = detection!.estimatedAspectRatio;
     if (estimatedRatio == null) {
       checks.add(const QualityCheck.notEvaluated(
         QualityCheckId.documentAspectRatio,
         detail: 'The detected boundary was degenerate (zero height).',
       ));
     } else {
-      final directDelta =
-          (estimatedRatio - expectedAspectRatio).abs() / expectedAspectRatio;
-      final invertedDelta = (estimatedRatio - 1 / expectedAspectRatio).abs() /
-          (1 / expectedAspectRatio);
-      final delta = directDelta < invertedDelta ? directDelta : invertedDelta;
+      final delta = aspectRatioDeviation(estimatedRatio, expectedAspectRatio);
       checks.add(QualityCheck(
         id: QualityCheckId.documentAspectRatio,
         outcome: delta > aspectRatioTolerance
@@ -149,4 +146,21 @@ DocumentFinalAnalysis analyzeDocumentCapture({
   ));
 
   return DocumentFinalAnalysis(qualityReport: QualityReport(checks), quad: quad);
+}
+
+/// The aspect ratio to rectify a detected card to: [expected], or its
+/// reciprocal when [measured] shows the card was captured rotated a quarter
+/// turn relative to how the profile expresses its ratio.
+///
+/// Rectifying a card held upright into a landscape rectangle would squash it
+/// to roughly 40% of its true height, so the orientation that fits what was
+/// actually seen wins. Falls back to [expected] when nothing was measured.
+double rectificationAspectRatio({
+  required double? measured,
+  required double expected,
+}) {
+  if (measured == null) return expected;
+  final direct = (measured - expected).abs() / expected;
+  final inverted = (measured - 1 / expected).abs() / (1 / expected);
+  return inverted < direct ? 1 / expected : expected;
 }

@@ -6,11 +6,15 @@
 library;
 
 export 'src/common/capture_image.dart';
+export 'src/common/capture_review.dart'
+    show CaptureReviewOutcome, ReviewAccepted, RetakeRequested;
 export 'src/common/errors.dart';
 export 'src/common/geometry.dart';
 export 'src/common/guidance.dart';
 export 'src/common/labels.dart';
 export 'src/common/quality.dart';
+export 'src/document/document_capture_controller.dart';
+export 'src/document/document_frame_analysis.dart' show DocumentGuidanceState;
 export 'src/document/document_options.dart';
 export 'src/document/document_profile.dart';
 export 'src/document/document_result.dart';
@@ -22,6 +26,5 @@ export 'src/portrait/portrait_capture_controller.dart';
 export 'src/portrait/portrait_frame_analysis.dart' show PortraitGuidanceState;
 export 'src/portrait/portrait_options.dart';
 export 'src/portrait/portrait_result.dart';
-export 'src/portrait/portrait_review_screen.dart'
-    show PortraitReviewOutcome, ReviewAccepted, RetakeRequested;
+export 'src/portrait/portrait_review_screen.dart' show PortraitReviewOutcome;
 export 'src/smart_capture.dart';

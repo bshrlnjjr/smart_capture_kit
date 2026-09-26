@@ -65,16 +65,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 FilledButton.tonalIcon(
-                  onPressed: () => _runCapture(
-                    () => SmartCapture.captureDocument(
-                      context,
-                      options: DocumentCaptureOptions(
-                        documentProfile: 'jo_national_id',
-                        sides: DocumentSides.frontAndBack,
-                        labels: _labels,
-                      ),
-                    ),
-                  ),
+                  onPressed: _captureDocument,
                   icon: const Icon(Icons.badge_outlined),
                   label: Text(_labels.documentFrontTitle),
                 ),
@@ -144,6 +135,67 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _captureDocument() async {
+    try {
+      final result = await SmartCapture.captureDocument(
+        context,
+        options: DocumentCaptureOptions(
+          documentProfile: 'jo_national_id',
+          sides: DocumentSides.frontAndBack,
+          labels: _labels,
+        ),
+      );
+      if (result == null || !mounted) return; // user cancelled
+
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Document captured'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final side in [result.front, result.back])
+                  if (side != null) ...[
+                    Text(
+                      side.side.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Image.file(
+                      (side.rectifiedImage ?? side.originalImage).file,
+                      height: 120,
+                    ),
+                    Text('rectified: ${side.rectifiedImage != null}'),
+                    Text(
+                      'continued despite failures: '
+                      '${side.userContinuedDespiteFailures}',
+                    ),
+                    for (final check in side.qualityReport.checks)
+                      Text('${check.id.name}: ${check.outcome.name}'),
+                    const Divider(),
+                  ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+
+      // As with the portrait result: the example keeps nothing, so it
+      // deletes every document image as soon as the summary closes.
+      await result.dispose();
+    } on SmartCaptureException catch (e) {
+      if (!mounted) return;
+      await _showError(e);
+    }
+  }
+
   Future<void> _showError(SmartCaptureException e) => showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
@@ -158,14 +210,6 @@ class _HomePageState extends State<HomePage> {
         ),
       );
 
-  Future<void> _runCapture(Future<Object?> Function() action) async {
-    try {
-      await action();
-    } on SmartCaptureException catch (e) {
-      if (!mounted) return;
-      await _showError(e);
-    }
-  }
 }
 
 class _PhaseBanner extends StatelessWidget {
@@ -182,16 +226,16 @@ class _PhaseBanner extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Phase 4 — portrait capture is live',
+              'Phase 5 — portrait and document capture are live',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8),
             Text(
-              'Portrait capture runs a real camera + on-device face-detection '
-              'pipeline: live guidance, a full-resolution quality pass, and an '
-              'optional cropped output. Document capture and OCR are not '
-              'implemented yet, so that button still surfaces a structured '
-              'SmartCaptureException rather than pretending to work.',
+              'Portrait capture runs camera + on-device face detection. '
+              'Document capture detects the card boundary live, then '
+              'perspective-corrects each side and runs quality checks on the '
+              'full-resolution image. OCR is not implemented yet, so '
+              'document results carry images and checks only.',
             ),
           ],
         ),
