@@ -1,9 +1,9 @@
 name: smart_capture_kit
 description: "Guided portrait and ID-card capture with on-device quality checks and OCR field extraction for Flutter."
 version: 0.0.1
-homepage: https://github.com/bashar526/smart_capture_kit
-repository: https://github.com/bashar526/smart_capture_kit
-issue_tracker: https://github.com/bashar526/smart_capture_kit/issues
+homepage: https://github.com/bshrlnjjr/smart_capture_kit
+repository: https://github.com/bshrlnjjr/smart_capture_kit
+issue_tracker: https://github.com/bshrlnjjr/smart_capture_kit/issues
 
 environment:
   sdk: ^3.13.3
