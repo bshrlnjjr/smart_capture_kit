@@ -190,3 +190,27 @@ floor this package can declare:
    gap — but it means a future CI job building the example for the simulator
    needs an x86_64-capable (or Rosetta-enabled) runner, and it does not affect
    physical-device builds, which link the pods' arm64 device slice normally.
+
+## Addendum (phase 6): first measurements, desktop proxy
+
+Full method and tables: `doc/benchmarks/phase6-desktop-ocr.md`. These are
+120 synthetic card images run on macOS, not phones, so they bound the
+problem rather than settle it.
+
+- Apple Vision (revision 3, `.accurate`) read the synthetic set almost
+  perfectly: Arabic CER at or below 0.6% and 94–100% key-field accuracy in
+  every variant, including Arabic-Indic digits. Open risk 1 (iOS Arabic) is
+  reduced but still needs one iPhone run.
+- Tesseract `ara` did markedly worse: 10–31% Arabic CER, and 66–89%
+  key-field accuracy. It read **0 of 60 Arabic-Indic dates**, even with the
+  Arabic model alone. The Android Arabic leg of this decision is therefore
+  **downgraded to provisional**. It stands only if the target document does
+  not rely on Arabic-Indic digits, and only after a stronger on-device Arabic
+  engine has been measured on the same set.
+- If Tesseract is kept, the model is `tessdata_fast` `ara` (1.4 MB), not
+  `best`. The two were within noise on accuracy, and `best` is 2x slower
+  and 9x larger. That replaces the ~15 MB estimate above: Latin is ML
+  Kit's job on Android, so `eng` need not ship.
+- Language correction on Vision stays off by default. It rewrites text
+  toward dictionary words, which conflicts with the rule that raw text is
+  never silently repaired.

@@ -5,6 +5,17 @@
 Not published. The package is in early development; see the status table in
 the README for what works today.
 
+### Added (phase 6 — OCR prototype, in progress)
+
+- Synthetic-card OCR benchmark (`tool/ocr_benchmark/`) and first desktop
+  results (`doc/benchmarks/phase6-desktop-ocr.md`): Apple Vision reads the
+  set almost perfectly; Tesseract `ara` misses every Arabic-Indic date and
+  drops Arabic lines under glare. No production OCR engine is chosen yet.
+
+### Fixed
+
+- `normalizeForComparison` now also strips U+061C (Arabic Letter Mark).
+
 ### Added (phase 5 — document capture)
 
 - `SmartCapture.captureDocument` is implemented end to end: guided live

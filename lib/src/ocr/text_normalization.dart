@@ -34,9 +34,10 @@ final RegExp _arabicDiacritics = RegExp('[\u064B-\u0652\u0670]');
 
 /// Bidirectional control characters that engines may embed around
 /// right-to-left runs. They are invisible, and they break naive string
-/// equality.
+/// equality. Tesseract wraps every Arabic line in RLM ... LRM; U+061C is the
+/// Arabic Letter Mark.
 final RegExp _bidiControls =
-    RegExp('[\u200E\u200F\u202A-\u202E\u2066-\u2069]');
+    RegExp('[\u200E\u200F\u061C\u202A-\u202E\u2066-\u2069]');
 
 final RegExp _whitespaceRun = RegExp(r'\s+');
 

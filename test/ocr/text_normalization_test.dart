@@ -77,6 +77,15 @@ void main() {
       expect(normalizeForComparison(withControls), normalizeForComparison('الاسم'));
     });
 
+    test('strips the marks Tesseract wraps Arabic lines in', () {
+      // Observed verbatim in the phase 6 benchmark: RLM ... LRM around every
+      // Arabic line; U+061C (Arabic Letter Mark) is the Arabic-specific one.
+      const tesseractLine = '\u200Fالجنس: ذكر\u200E';
+      const withAlm = '\u061Cالجنس: ذكر';
+      expect(normalizeForComparison(tesseractLine), normalizeForComparison('الجنس: ذكر'));
+      expect(normalizeForComparison(withAlm), normalizeForComparison('الجنس: ذكر'));
+    });
+
     test('collapses whitespace runs and trims', () {
       expect(normalizeForComparison('  a   b \n c '), 'a b c');
     });
